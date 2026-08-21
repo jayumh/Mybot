@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08080a">
+<title>Workspace</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+:root{
+  --bg:#08080a;
+  --panel:#0f0f14;
+  --card:#14141c;
+  --input:#1a1a24;
+  --text:#f2f2f8;
+  --muted:#7c7c8e;
+  --border:rgba(255,255,255,.07);
+  --border-focus:rgba(255,255,255,.2);
+  --accent:#e6e6f0;
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100dvh;background:var(--bg);color:var(--text)}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  overflow-x:hidden;
+  letter-spacing:-0.011em;
+}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+::selection{background:rgba(255,255,255,.15)}
+
+#loading{
+  position:fixed;
+  inset:0;
+  z-index:99999;
+  background:#08080a;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  letter-spacing:2px;
+  font-weight:500;
+}
+
+/* ================= STARTUP SCREEN (PHELE WALA ANIMATION) ================= */
+
+.startup{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  background:#08080a;
+  transition:opacity 0.8s cubic-bezier(.16,1,.3,1),visibility 0.8s;
+}
+
+.startup.hide{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.brand-stage{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:16px;
+  animation:stageFadeIn 1s cubic-bezier(.16,1,.3,1) forwards;
+}
+
+@keyframes stageFadeIn{
+  from{opacity:0;transform:scale(.92) translateY(12px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+
+.custom-logo{
+  width:80px;
+  height:80px;
+  border-radius:20px;
+  background:linear-gradient(145deg,#22222e,#0d0d12);
+  border:1px solid rgba(255,255,255,.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  box-shadow:0 20px 40px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.15);
+  animation:logoPulse 3s infinite ease-in-out;
+}
+
+@keyframes logoPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.03)}
+}
+
+.custom-logo::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:20px;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),transparent 60%);
+  pointer-events:none;
+}
+
+.s-glyph{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Rounded","SF Pro Display",sans-serif;
+  font-weight:800;
+  font-size:46px;
+  line-height:1;
+  background:linear-gradient(180deg,#ffffff 30%,#a1a1b5 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,.5));
+}
+
+/* ================= MAIN INTERFACE ================= */
+
+.app{
+  min-height:100dvh;
+  display:flex;
+  opacity:0;
+  transform:scale(.99);
+  transition:opacity .6s ease .4s,transform .6s cubic-bezier(.16,1,.3,1) .4s;
+}
+
+.app.ready{
+  opacity:1;
+  transform:scale(1);
+}
+
+.sidebar{
+  width:260px;
+  min-height:100dvh;
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  padding:16px;
+  flex-shrink:0;
+  z-index:100;
+}
+
+.brand-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  height:44px;
+  margin-bottom:12px;
+}
+
+.ui-logo{
+  width:34px;
+  height:34px;
+  border-radius:9px;
+  background:linear-gradient(145deg,#22222e,#0d0d12);
+  border:1px solid rgba(255,255,255,.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1);
+}
+
+.ui-logo .s-glyph{
+  font-size:20px;
+}
+
+.brand-title{font-size:13px;font-weight:600;color:#fff;letter-spacing:-0.01em;}
+
+.new-chat{
+  height:38px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:rgba(255,255,255,.03);
+  color:white;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 12px;
+  font-size:12px;
+  font-weight:500;
+  transition:.2s;
+}
+
+.new-chat:hover{
+  background:rgba(255,255,255,.07);
+  border-color:rgba(255,255,255,.15);
+}
+
+.search{
+  margin:10px 0;
+  position:relative;
+}
+
+.search svg{
+  position:absolute;
+  left:10px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#555566;
+}
+
+.search input{
+  width:100%;
+  height:34px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:rgba(0,0,0,.2);
+  color:white;
+  outline:none;
+  padding:0 10px 0 32px;
+  font-size:11px;
+  transition:.2s;
+}
+
+.search input:focus{
+  border-color:var(--border-focus);
+}
+
+.history-label{
+  color:var(--muted);
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  padding:8px 4px 4px;
+}
+
+.history{
+  flex:1;
+  overflow-y:auto;
+}
+
+.chat{
+  position:relative;
+  width:100%;
+  text-align:left;
+  background:transparent;
+  border:1px solid transparent;
+  border-radius:8px;
+  padding:8px 10px;
+  color:#d0d0dc;
+  margin-bottom:2px;
+  transition:.15s;
+}
+
+.chat:hover,.chat.active{
+  background:rgba(255,255,255,.04);
+}
+
+.chat.active{
+  color:#fff;
+  border-color:rgba(255,255,255,.08);
+}
+
+.chat-title{
+  font-size:12px;
+  font-weight:500;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  padding-right:18px;
+}
+
+.chat-preview{
+  color:var(--muted);
+  font-size:10px;
+  margin-top:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.chat-menu{
+  position:absolute;
+  right:6px;
+  top:8px;
+  opacity:0;
+  color:#888;
+  background:none;
+  border:0;
+  padding:2px 4px;
+}
+
+.chat:hover .chat-menu,.chat.active .chat-menu{opacity:1}
+
+.sidebar-bottom{
+  border-top:1px solid var(--border);
+  padding-top:10px;
+  margin-top:10px;
+}
+
+.side-btn{
+  width:100%;
+  height:36px;
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 10px;
+  font-size:12px;
+  transition:.15s;
+}
+
+.side-btn:hover{
+  color:white;
+  background:rgba(255,255,255,.04);
+}
+
+/* ================= MAIN CONTENT ================= */
+
+.main{
+  flex:1;
+  min-width:0;
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  background:var(--bg);
+}
+
+.topbar{
+  height:52px;
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 18px;
+  border-bottom:1px solid var(--border);
+  background:rgba(8,8,10,.8);
+  backdrop-filter:blur(16px);
+  z-index:20;
+}
+
+.top-left,.top-right{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.icon-btn{
+  width:32px;
+  height:32px;
+  border:1px solid transparent;
+  background:transparent;
+  border-radius:8px;
+  color:var(--muted);
+  display:grid;
+  place-items:center;
+  transition:.15s;
+}
+
+.icon-btn:hover{
+  background:rgba(255,255,255,.05);
+  color:white;
+  border-color:var(--border);
+}
+
+.mobile-menu{display:none}
+
+.chat-scroll{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  scroll-behavior:smooth;
+}
+
+.content{
+  width:min(820px,100%);
+  margin:auto;
+  padding:36px 20px 180px;
+}
+
+/* ================= WELCOME SCREEN ================= */
+
+.welcome{
+  min-height:calc(100dvh - 180px);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+}
+
+.welcome-logo{
+  width:64px;
+  height:64px;
+  border-radius:16px;
+  margin-bottom:20px;
+}
+
+.welcome h1{
+  margin:0;
+  font-size:clamp(24px,3.5vw,32px);
+  letter-spacing:-.03em;
+  font-weight:600;
+  color:#ffffff;
+}
+
+.welcome p{
+  color:var(--muted);
+  font-size:13px;
+  margin:10px 0 32px;
+  max-width:420px;
+  line-height:1.5;
+}
+
+.suggestions{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:10px;
+  width:min(640px,100%);
+}
+
+.suggestion{
+  text-align:left;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.015);
+  color:#d0d0dc;
+  border-radius:12px;
+  padding:14px;
+  transition:.2s;
+}
+
+.suggestion:hover{
+  border-color:rgba(255,255,255,.18);
+  background:rgba(255,255,255,.035);
+  color:white;
+}
+
+.s-title{
+  font-size:12px;
+  font-weight:600;
+  margin-bottom:3px;
+}
+
+.s-desc{
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.4;
+}
+
+/* ================= CHAT MESSAGES ================= */
+
+.messages{
+  display:flex;
+  flex-direction:column;
+  gap:24px;
+}
+
+.message{
+  display:flex;
+  gap:12px;
+  animation:messageIn .25s ease-out;
+}
+
+@keyframes messageIn{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.message.user{justify-content:flex-end}
+
+.avatar{
+  width:30px;
+  height:30px;
+  min-width:30px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  margin-top:2px;
+}
+
+.ai-avatar{
+  background:linear-gradient(145deg,#22222e,#0d0d12);
+  border:1px solid rgba(255,255,255,.12);
+}
+
+.user-avatar{
+  background:var(--accent);
+  color:#08080a;
+  font-size:11px;
+  font-weight:700;
+}
+
+.body{
+  max-width:min(720px,90%);
+  min-width:0;
+}
+
+.user .body{max-width:min(600px,85%)}
+
+.user-bubble{
+  background:var(--input);
+  border:1px solid rgba(255,255,255,.08);
+  padding:10px 14px;
+  border-radius:14px 14px 4px 14px;
+  font-size:13px;
+  line-height:1.55;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+
+.ai{
+  color:#e2e2ec;
+  font-size:13px;
+  line-height:1.65;
+  overflow-wrap:anywhere;
+}
+
+.ai p{margin:.5em 0}
+.ai h1,.ai h2,.ai h3{color:white;line-height:1.3;font-weight:600}
+.ai code{
+  background:rgba(255,255,255,.07);
+  border-radius:4px;
+  padding:2px 5px;
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  font-size:12px;
+}
+.ai pre{
+  overflow:auto;
+  background:#0c0c10;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:12px;
+  margin:.8em 0;
+}
+.ai pre code{background:none;padding:0}
+
+.tools{
+  display:flex;
+  gap:6px;
+  margin-top:6px;
+  opacity:.4;
+  transition:.2s;
+}
+
+.message:hover .tools{opacity:1}
+
+.tool{
+  border:0;
+  background:transparent;
+  color:var(--muted);
+  padding:2px 6px;
+  border-radius:4px;
+  font-size:11px;
+}
+
+.tool:hover{
+  background:rgba(255,255,255,.06);
+  color:white;
+}
+
+.typing{
+  display:flex;
+  gap:4px;
+  padding:6px 0;
+}
+
+.typing i{
+  width:4px;
+  height:4px;
+  background:#aaa;
+  border-radius:50%;
+  animation:typing 1.2s infinite ease-in-out;
+}
+
+.typing i:nth-child(2){animation-delay:.2s}
+.typing i:nth-child(3){animation-delay:.4s}
+
+@keyframes typing{
+  0%,100%{opacity:.2;transform:translateY(0)}
+  50%{opacity:1;transform:translateY(-3px)}
+}
+
+/* ================= INPUT COMPOSER ================= */
+
+.composer-area{
+  position:absolute;
+  z-index:30;
+  left:0;
+  right:0;
+  bottom:0;
+  pointer-events:none;
+  padding:0 16px calc(16px + env(safe-area-inset-bottom));
+  background:linear-gradient(to top,#08080a 40%,transparent);
+}
+
+.composer{
+  pointer-events:auto;
+  width:min(800px,100%);
+  margin:auto;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(20,20,28,.85);
+  border-radius:14px;
+  backdrop-filter:blur(20px);
+  box-shadow:0 12px 40px rgba(0,0,0,.5);
+  transition:.2s;
+}
+
+.composer:focus-within{
+  border-color:var(--border-focus);
+  box-shadow:0 12px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1);
+}
+
+.composer-row{
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+  padding:8px 10px;
+}
+
+.attach{
+  width:34px;
+  min-width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border:0;
+  border-radius:8px;
+  color:var(--muted);
+  background:transparent;
+  transition:.15s;
+}
+
+.attach:hover{background:rgba(255,255,255,.05);color:white}
+
+textarea{
+  flex:1;
+  min-width:0;
+  min-height:34px;
+  max-height:140px;
+  resize:none;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:white;
+  padding:7px 4px;
+  font-size:13px;
+  line-height:1.4;
+}
+
+textarea::placeholder{color:#555566}
+
+.send{
+  width:34px;
+  min-width:34px;
+  height:34px;
+  border:0;
+  border-radius:8px;
+  background:var(--accent);
+  color:#08080a;
+  display:grid;
+  place-items:center;
+  transition:.15s;
+}
+
+.send:disabled{
+  background:rgba(255,255,255,.08);
+  color:#444455;
+}
+
+.send:not(:disabled):hover{
+  opacity:.9;
+  transform:translateY(-1px);
+}
+
+/* ================= MODALS & TOASTS ================= */
+
+.modal-layer{
+  position:fixed;
+  inset:0;
+  z-index:500;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(0,0,0,.7);
+  backdrop-filter:blur(8px);
+}
+
+.modal-layer.open{display:flex}
+
+.modal{
+  width:min(480px,100%);
+  max-height:85dvh;
+  overflow:auto;
+  background:#121218;
+  border:1px solid var(--border);
+  border-radius:14px;
+  box-shadow:0 24px 80px rgba(0,0,0,.8);
+}
+
+.modal-head{
+  height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 18px;
+  border-bottom:1px solid var(--border);
+}
+
+.modal-title{font-size:13px;font-weight:600}
+.modal-body{padding:18px}
+.section{margin-bottom:18px}
+.section-title{color:#bbb;font-size:11px;font-weight:600;margin-bottom:10px}
+.label{color:var(--muted);font-size:11px;display:block;margin-bottom:6px}
+
+.field,.select,.setting-textarea{
+  width:100%;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:var(--input);
+  color:white;
+  outline:none;
+}
+
+.field,.select{height:36px;padding:0 10px;font-size:12px}
+.setting-textarea{min-height:80px;padding:10px;resize:vertical;font-size:12px}
+
+.modal-btn{
+  width:100%;
+  height:36px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  margin-top:8px;
+  background:rgba(255,255,255,.04);
+  color:#ddd;
+  font-size:12px;
+  font-weight:500;
+}
+
+.modal-btn.primary{background:var(--accent);color:#08080a;font-weight:600;border:0}
+.modal-btn.danger{color:#ff6b6b;border-color:rgba(255,107,107,.2)}
+
+.toasts{
+  position:fixed;
+  right:20px;
+  bottom:80px;
+  z-index:1000;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.toast{
+  background:#181822;
+  border:1px solid var(--border);
+  color:#eee;
+  padding:10px 14px;
+  border-radius:8px;
+  font-size:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+
+.backdrop{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:90;
+  background:rgba(0,0,0,.6);
+}
+
+@media(max-width:800px){
+  .sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    bottom:0;
+    transform:translateX(-105%);
+    transition:transform .25s cubic-bezier(.16,1,.3,1);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .backdrop.open{display:block}
+  .mobile-menu{display:grid}
+  .suggestions{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div id="loading">WORKSPACE LOADING...</div>
+
+<!-- STARTUP ANIMATION -->
+<div class="startup" id="startup">
+  <div class="brand-stage">
+    <div class="custom-logo">
+      <div class="s-glyph">S</div>
+    </div>
+  </div>
+</div>
+
+<div class="backdrop" id="backdrop"></div>
+
+<div class="app" id="app">
+
+  <aside class="sidebar" id="sidebar">
+
+    <div class="brand-header">
+      <div class="ui-logo">
+        <div class="s-glyph">S</div>
+      </div>
+      <div>
+        <div class="brand-title">Workspace</div>
+      </div>
+    </div>
+
+    <button class="new-chat" id="newChat">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      New Conversation
+    </button>
+
+    <div class="search">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"/>
+        <path d="m20 20-4-4"/>
+      </svg>
+      <input id="search" placeholder="Search threads...">
+    </div>
+
+    <div class="history-label">History</div>
+    <div class="history" id="history"></div>
+
+    <div class="sidebar-bottom">
+      <button class="side-btn" id="settingsBtn">⚙ Settings & Engine</button>
+    </div>
+
+  </aside>
+
+  <main class="main">
+
+    <header class="topbar">
+
+      <div class="top-left">
+        <button class="icon-btn mobile-menu" id="menuBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 7h16M4 12h16M4 17h16"/>
+          </svg>
+        </button>
+
+        <div class="ui-logo" style="width:26px;height:26px;border-radius:6px;">
+          <div class="s-glyph" style="font-size:15px">S</div>
+        </div>
+      </div>
+
+      <div class="top-right">
+        <button class="icon-btn" id="clearBtn" title="Clear Chat">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 7h16M10 11v6M14 11v6M6 7l1 14h10l1-14M9 7V4h6v3"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="topSettings">⚙</button>
+      </div>
+
+    </header>
+
+    <div class="chat-scroll" id="scroll">
+      <div class="content">
+
+        <section class="welcome" id="welcome">
+          <div class="custom-logo welcome-logo">
+            <div class="s-glyph">S</div>
+          </div>
+          <h1>How can I assist you today?</h1>
+          <p>Architect code, analyze complex systems, or draft detailed structured documents.</p>
+
+          <div class="suggestions">
+            <button class="suggestion" data-prompt="Explain a complex technical concept in structured simple terms.">
+              <div class="s-title">Explain Core Concepts</div>
+              <div class="s-desc">Break down challenging topics cleanly</div>
+            </button>
+            <button class="suggestion" data-prompt="Write clean, modular, and documented production code.">
+              <div class="s-title">Architect Software</div>
+              <div class="s-desc">Draft scalable scripts and algorithms</div>
+            </button>
+            <button class="suggestion" data-prompt="Help me brainstorm practical strategies for an ambitious project.">
+              <div class="s-title">Strategic Planning</div>
+              <div class="s-desc">Structure actionable roadmaps</div>
+            </button>
+            <button class="suggestion" data-prompt="Analyze a problem logically and suggest optimal solutions.">
+              <div class="s-title">Analytical Breakdown</div>
+              <div class="s-desc">Identify root causes and solutions</div>
+            </button>
+          </div>
+        </section>
+
+        <div class="messages" id="messages"></div>
+
+      </div>
+    </div>
+
+    <div class="composer-area">
+      <div class="composer">
+        <div class="composer-row">
+          <button class="attach" id="attach" title="Attachment">+</button>
+          <textarea id="input" rows="1" placeholder="Message Workspace..." autocomplete="off"></textarea>
+          <button class="send" id="send" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 19V5M6 11l6-6 6 6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-layer" id="settingsModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Settings & Configuration</div>
+      <button class="icon-btn" id="closeSettings">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="section">
+        <div class="section-title">API Configuration</div>
+        <label class="label">OpenRouter API Key</label>
+        <input class="field" id="apiKey" type="password" placeholder="sk-or-v1-...">
+        <br><br>
+        <label class="label">AI Model Target</label>
+        <input class="field" id="model" placeholder="deepseek/deepseek-r1:free">
+        <br><br>
+        <label class="label">Temperature</label>
+        <input id="temperature" type="range" min="0" max="2" step=".1" style="width:100%">
+        <span id="tempValue" style="font-size:11px;color:var(--muted)">0.7</span>
+        <br><br>
+        <label class="label">Max Token Limits</label>
+        <input class="field" id="maxTokens" type="number" min="100" max="32768">
+      </div>
+
+      <div class="section">
+        <div class="section-title">System Instructions</div>
+        <textarea class="setting-textarea" id="systemPrompt"></textarea>
+      </div>
+
+      <button class="modal-btn" id="clearCurrent">Clear Active Chat</button>
+      <button class="modal-btn danger" id="deleteAll">Delete All Chats</button>
+      <button class="modal-btn primary" id="saveSettings">Save Configuration</button>
+    </div>
+  </div>
+</div>
+
+<!-- RENAME MODAL -->
+<div class="modal-layer" id="renameModal">
+  <div class="modal" style="width:min(380px,100%)">
+    <div class="modal-head">
+      <div class="modal-title">Rename Thread</div>
+      <button class="icon-btn" id="closeRename">×</button>
+    </div>
+    <div class="modal-body">
+      <label class="label">Thread Title</label>
+      <input class="field" id="renameInput" maxlength="80">
+      <button class="modal-btn primary" id="saveRename">Save Title</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+(() => {
+"use strict";
+
+/* ================= STATE & CONFIG ================= */
+
+const API_URL="https://openrouter.ai/api/v1/chat/completions";
+const DEFAULT_MODEL="deepseek/deepseek-r1:free";
+const DEFAULT_PROMPT="You are a professional intelligence workspace assistant. Provide clear, well-structured, accurate, and highly articulate responses.";
+
+const KEY={
+  settings:"smart_ai_settings",
+  chats:"smart_ai_chats",
+  current:"smart_ai_current"
+};
+
+let settings={
+  apiKey:"",
+  model:DEFAULT_MODEL,
+  temperature:.7,
+  maxTokens:4096,
+  systemPrompt:DEFAULT_PROMPT
+};
+
+let chats=[];
+let currentId=null;
+let generating=false;
+let controller=null;
+let renameId=null;
+
+const $=id=>document.getElementById(id);
+const startup=$("startup");
+const app=$("app");
+const loading=$("loading");
+const sidebar=$("sidebar");
+const backdrop=$("backdrop");
+const history=$("history");
+const messages=$("messages");
+const welcome=$("welcome");
+const scroll=$("scroll");
+const input=$("input");
+const send=$("send");
+
+/* ================= LOCAL STORAGE ================= */
+
+function getStorage(key,fallback){
+  try{
+    const val=localStorage.getItem(key);
+    return val===null?fallback:JSON.parse(val);
+  }catch{return fallback;}
+}
+
+function setStorage(key,val){
+  try{localStorage.setItem(key,JSON.stringify(val));}catch{toast("Local Storage Limit Reached.");}
+}
+
+function saveChats(){ setStorage(KEY.chats,chats); }
+function saveSettingsStorage(){ setStorage(KEY.settings,settings); }
+function saveCurrent(){ setStorage(KEY.current,currentId); }
+
+/* ================= CHAT LOGIC ================= */
+
+function genId(){ return Date.now().toString(36)+Math.random().toString(36).slice(2); }
+
+function createChat(render=true){
+  const chat={
+    id:genId(),
+    title:"New Conversation",
+    createdAt:Date.now(),
+    updatedAt:Date.now(),
+    messages:[]
+  };
+  chats.unshift(chat);
+  currentId=chat.id;
+  saveChats();
+  saveCurrent();
+  if(render){
+    renderAll();
+    closeSidebar();
+    input.focus();
+  }
+  return chat;
+}
+
+function currentChat(){ return chats.find(c=>c.id===currentId)||null; }
+
+function load(){
+  const s=getStorage(KEY.settings,null);
+  if(s&&typeof s==="object") settings={...settings,...s};
+  const c=getStorage(KEY.chats,[]);
+  if(Array.isArray(c)) chats=c.filter(x=>x&&x.id&&Array.isArray(x.messages));
+  currentId=getStorage(KEY.current,null);
+
+  if(!chats.length) createChat(false);
+  if(!chats.some(c=>c.id===currentId)){
+    currentId=chats[0].id;
+    saveCurrent();
+  }
+}
+
+/* ================= RENDERING ================= */
+
+function renderHistory(){
+  history.innerHTML="";
+  const q=$("search").value.toLowerCase().trim();
+
+  chats
+    .filter(c=>!q||c.title.toLowerCase().includes(q))
+    .sort((a,b)=>b.updatedAt-a.updatedAt)
+    .forEach(chat=>{
+      const el=document.createElement("button");
+      el.className="chat"+(chat.id===currentId?" active":"");
+      el.innerHTML=`
+        <div class="chat-title"></div>
+        <div class="chat-preview"></div>
+        <button class="chat-menu">•••</button>
+      `;
+      el.querySelector(".chat-title").textContent=chat.title;
+      const lastMsg=chat.messages[chat.messages.length-1];
+      el.querySelector(".chat-preview").textContent=lastMsg?String(lastMsg.content).slice(0,40):"Empty conversation";
+
+      el.onclick=()=>{
+        currentId=chat.id;
+        saveCurrent();
+        renderAll();
+        closeSidebar();
+      };
+
+      el.querySelector(".chat-menu").onclick=(e)=>{
+        e.stopPropagation();
+        openRename(chat.id);
+      };
+
+      history.appendChild(el);
+    });
+}
+
+function markdown(text){
+  if(typeof marked==="undefined") return String(text).replace(/\n/g,"<br>");
+  try{ return marked.parse(String(text||"")); }catch{ return String(text); }
+}
+
+function renderMessages(){
+  const chat=currentChat();
+  messages.innerHTML="";
+
+  if(!chat||!chat.messages.length){
+    welcome.style.display="flex";
+    return;
+  }
+  welcome.style.display="none";
+
+  chat.messages.forEach((msg,index)=>{
+    const row=document.createElement("div");
+    row.className="message "+(msg.role==="user"?"user":"assistant");
+
+    if(msg.role==="user"){
+      row.innerHTML=`
+        <div class="body"><div class="user-bubble"></div></div>
+        <div class="avatar user-avatar">U</div>
+      `;
+      row.querySelector(".user-bubble").textContent=msg.content;
+    }else{
+      row.innerHTML=`
+        <div class="avatar ai-avatar">
+          <div class="s-glyph" style="font-size:16px">S</div>
+        </div>
+        <div class="body">
+          <div class="ai"></div>
+          <div class="tools">
+            <button class="tool copy">Copy</button>
+            <button class="tool regen">Regenerate</button>
+          </div>
+        </div>
+      `;
+      row.querySelector(".ai").innerHTML=markdown(msg.content);
+      row.querySelector(".copy").onclick=()=>navigator.clipboard.writeText(msg.content);
+      row.querySelector(".regen").onclick=()=>regenerate(index);
+    }
+    messages.appendChild(row);
+  });
+}
+
+function renderAll(){
+  renderHistory();
+  renderMessages();
+  updateSend();
+}
+
+/* ================= COMPOSER & INTERACTION ================= */
+
+function resize(){
+  input.style.height="auto";
+  input.style.height=Math.min(Math.max(input.scrollHeight,34),140)+"px";
+}
+
+function updateSend(){
+  send.disabled=!input.value.trim() && !generating;
+}
+
+function openSidebar(){ sidebar.classList.add("open"); backdrop.classList.add("open"); }
+function closeSidebar(){ sidebar.classList.remove("open"); backdrop.classList.remove("open"); }
+
+function openSettings(){
+  $("apiKey").value=settings.apiKey||"";
+  $("model").value=settings.model||DEFAULT_MODEL;
+  $("temperature").value=settings.temperature;
+  $("tempValue").textContent=Number(settings.temperature).toFixed(1);
+  $("maxTokens").value=settings.maxTokens;
+  $("systemPrompt").value=settings.systemPrompt||DEFAULT_PROMPT;
+  $("settingsModal").classList.add("open");
+}
+
+function closeSettings(){ $("settingsModal").classList.remove("open"); }
+
+function toast(text){
+  const t=document.createElement("div");
+  t.className="toast";
+  t.textContent=text;
+  $("toasts").appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+}
+
+/* ================= STREAMING API ENGINE ================= */
+
+async function sendMessage(){
+  if(generating){ if(controller) controller.abort(); return; }
+  const text=input.value.trim();
+  if(!text) return;
+
+  const chat=currentChat();
+  if(!chat) return;
+
+  // Auto modal popup removed completely. Only toast shown.
+  if(!settings.apiKey){ 
+    toast("API Key missing. Click ⚙ Settings to add your key."); 
+    return; 
+  }
+
+  chat.messages.push({role:"user",content:text});
+  if(chat.title==="New Conversation") chat.title=text.slice(0,35)+"...";
+  chat.updatedAt=Date.now();
+
+  input.value="";
+  resize();
+  saveChats();
+  renderAll();
+
+  generating=true;
+  updateSend();
+
+  const row=document.createElement("div");
+  row.className="message assistant";
+  row.innerHTML=`
+    <div class="avatar ai-avatar"><div class="s-glyph" style="font-size:16px">S</div></div>
+    <div class="body"><div class="ai"><div class="typing"><i></i><i></i><i></i></div></div></div>
+  `;
+  messages.appendChild(row);
+
+  try{
+    controller=new AbortController();
+    const res=await fetch(API_URL,{
+      method:"POST",
+      headers:{
+        "Authorization":"Bearer "+settings.apiKey,
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        model:settings.model||DEFAULT_MODEL,
+        messages:[
+          {role:"system",content:settings.systemPrompt||DEFAULT_PROMPT},
+          ...chat.messages
+        ],
+        temperature:Number(settings.temperature),
+        max_tokens:Number(settings.maxTokens),
+        stream:true
+      }),
+      signal:controller.signal
+    });
+
+    if(!res.ok) throw new Error("API Exception");
+
+    const reader=res.body.getReader();
+    const decoder=new TextDecoder();
+    let answer="";
+    const aiBox=row.querySelector(".ai");
+
+    while(true){
+      const {value,done}=await reader.read();
+      if(done) break;
+      const chunk=decoder.decode(value);
+      const lines=chunk.split("\n");
+      for(let line of lines){
+        if(line.startsWith("data: ")){
+          const jsonStr=line.replace("data: ","").trim();
+          if(jsonStr==="[DONE]") continue;
+          try{
+            const parsed=JSON.parse(jsonStr);
+            const delta=parsed.choices[0]?.delta?.content||"";
+            answer+=delta;
+            aiBox.innerHTML=markdown(answer);
+            scroll.scrollTop=scroll.scrollHeight;
+          }catch(e){}
+        }
+      }
+    }
+
+    chat.messages.push({role:"assistant",content:answer});
+    chat.updatedAt=Date.now();
+    saveChats();
+    renderAll();
+
+  }catch(e){
+    row.remove();
+    toast("Request failed or was aborted.");
+  }finally{
+    generating=false;
+    controller=null;
+    updateSend();
+  }
+}
+
+async function regenerate(index){
+  const chat=currentChat();
+  if(!chat) return;
+  chat.messages=chat.messages.slice(0,index);
+  saveChats();
+  renderMessages();
+}
+
+function openRename(id){
+  renameId=id;
+  const chat=chats.find(c=>c.id===id);
+  if(chat){
+    $("renameInput").value=chat.title;
+    $("renameModal").classList.add("open");
+  }
+}
+
+/* ================= EVENT HANDLERS & INITIALIZATION ================= */
+
+function initEvents(){
+  $("newChat").onclick=()=>createChat();
+  $("menuBtn").onclick=openSidebar;
+  backdrop.onclick=closeSidebar;
+  $("settingsBtn").onclick=openSettings;
+  $("topSettings").onclick=openSettings;
+  $("closeSettings").onclick=closeSettings;
+  
+  $("temperature").oninput=()=>{
+    $("tempValue").textContent=Number($("temperature").value).toFixed(1);
+  };
+
+  $("saveSettings").onclick=()=>{
+    settings.apiKey=$("apiKey").value.trim();
+    settings.model=$("model").value.trim()||DEFAULT_MODEL;
+    settings.temperature=Number($("temperature").value);
+    settings.maxTokens=Number($("maxTokens").value)||4096;
+    settings.systemPrompt=$("systemPrompt").value.trim()||DEFAULT_PROMPT;
+    saveSettingsStorage();
+    closeSettings();
+    renderAll();
+    toast("Settings saved.");
+  };
+
+  $("clearBtn").onclick=()=>{
+    const chat=currentChat();
+    if(chat){ chat.messages=[]; saveChats(); renderAll(); toast("Conversation cleared."); }
+  };
+
+  $("clearCurrent").onclick=()=>{
+    const chat=currentChat();
+    if(chat){ chat.messages=[]; saveChats(); renderAll(); closeSettings(); toast("Chat cleared."); }
+  };
+
+  $("deleteAll").onclick=()=>{
+    chats=[];
+    createChat(false);
+    saveChats();
+    saveCurrent();
+    renderAll();
+    closeSettings();
+    toast("All threads deleted.");
+  };
+
+  $("saveRename").onclick=()=>{
+    const chat=chats.find(c=>c.id===renameId);
+    if(chat){
+      chat.title=$("renameInput").value.trim()||"Untitled";
+      saveChats();
+      renderHistory();
+      $("renameModal").classList.remove("open");
+      toast("Thread renamed.");
+    }
+  };
+  $("closeRename").onclick=()=>$("renameModal").classList.remove("open");
+
+  $("search").oninput=renderHistory;
+
+  input.oninput=()=>{ resize(); updateSend(); };
+  input.onkeydown=(e)=>{
+    if(e.key==="Enter"&&!e.shiftKey){
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+  send.onclick=sendMessage;
+
+  $("attach").onclick=()=>toast("Attachment functionality coming soon.");
+
+  document.querySelectorAll(".suggestion").forEach(b=>{
+    b.onclick=()=>{
+      input.value=b.dataset.prompt;
+      resize();
+      updateSend();
+      input.focus();
+    };
+  });
+}
+
+function startApp(){
+  load();
+  initEvents();
+  renderAll();
+  resize();
+
+  loading.style.display="none";
+
+  setTimeout(()=>{
+    startup.classList.add("hide");
+    app.classList.add("ready");
+  },1000);
+}
+
+startApp();
+
+})();
+</script>
+</body>
+</html>
